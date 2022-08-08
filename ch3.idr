@@ -60,30 +60,25 @@ addMatz : Num e => Vect m (Vect n e) -> Vect m (Vect n e) -> Vect m (Vect n e)
 addMatz m1 m2 = zipWith (\r1,r2 => zipWith (+) r1 r2) m1 m2
 
 
-svmult : Num e => e -> Vect k e -> Vect k e
-svmult c v = map (c *) v
 
-addVecs : Num e => {k : Nat} -> Vect h (Vect k e) -> Vect k e
-addVecs [] = replicate k 0
-addVecs (x :: xs) = zipWith (+) x (addVecs xs)
-
-
--- The linear combination of coefficients in cs of vectors in vs.
-lcomb : Num e => {n : Nat} -> Vect m e -> Vect m (Vect n e) -> Vect n e
-lcomb cs vs = addVecs (zipWith svmult cs vs)
-
-mulMat : Num e => {m,n : Nat} -> Vect m (Vect k e) -> Vect k (Vect n e) -> Vect m (Vect n e)
+mulMat : Num e => {m,k,n : Nat} -> Vect m (Vect k e) -> Vect k (Vect n e) -> Vect m (Vect n e)
 mulMat [] _ = []
 mulMat ([] :: xs) []  = replicate m (replicate n 0) -- see note below
 mulMat m1 m2 = map (\r => lcomb r m2) m1
+  where
+    svmult : e -> Vect n e -> Vect n e
+    svmult c v = map (c *) v
+
+    addVecs : {k : Nat} -> Vect k (Vect n e) -> Vect n e
+    addVecs [] = replicate n 0
+    addVecs (x :: xs) = zipWith (+) x (addVecs xs)
+
+    lcomb :  Vect k e -> Vect k (Vect n e) -> Vect n e
+    lcomb cs vs = addVecs (zipWith svmult cs vs)
 
 
--- NOTE: The second case above is defined somewhat arbitrarily, since it doesn't really make sense
--- to have an empty matrix on the right in a matrix multiplication, because in this case n is
--- unconstrained by inputs and yet we need to have a definite value for it in the results. That can
--- be handled by type inference or passing the implicit explicitly, but then we still need to fill
--- the n-length vectors with manufactured e values which aren't derived from inputs.
-
-
-
+-- NOTE: The second case above (empty RHS matrix) is not a possible case mathematically (nor the first case),
+-- and so is defined somewhat arbitrarily. In this case n is unconstrained by inputs and yet we need to have a
+-- definite value for it in the results. That can be handled by type inference or passing the implicit explicitly,
+-- but we still need to fill the n-length vectors with e values which aren't derived from the input matrices.
 
