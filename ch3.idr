@@ -22,6 +22,8 @@ rev xs = reverseIter xs []
     reverseIter [] acc = acc
     reverseIter (y::ys) acc = reverseIter ys (y::acc)
 
+vlen : {n : Nat} -> Vect n a -> Nat
+vlen v = n
 
 {-
 reverseIter : Vect k1 a -> Vect k2 a -> Vect (k1 + k2) a
@@ -33,6 +35,10 @@ Error: While processing right hand side of reverseIter. Can't solve constraint b
 reverseIter acc [] = acc
                      ^^^
 -}
+
+createEmpties : {n : Nat} -> Vect n (Vect 0 a)
+createEmpties {n = 0} = []
+createEmpties {n = (S k)} = [] :: createEmpties
 
 
 -- matrix transpose
@@ -60,25 +66,18 @@ addMatz : Num e => Vect m (Vect n e) -> Vect m (Vect n e) -> Vect m (Vect n e)
 addMatz m1 m2 = zipWith (\r1,r2 => zipWith (+) r1 r2) m1 m2
 
 
-
 mulMat : Num e => {m,k,n : Nat} -> Vect m (Vect k e) -> Vect k (Vect n e) -> Vect m (Vect n e)
 mulMat [] _ = []
-mulMat ([] :: xs) []  = replicate m (replicate n 0) -- see note below
+mulMat ([] :: xs) []  = replicate m (replicate n 0) -- a bit arbitrary but this and above case aren't covered by mathematical definition of mat mult anyway
 mulMat m1 m2 = map (\r => lcomb r m2) m1
   where
-    svmult : e -> Vect n e -> Vect n e
-    svmult c v = map (c *) v
-
     addVecs : {k : Nat} -> Vect k (Vect n e) -> Vect n e
     addVecs [] = replicate n 0
     addVecs (x :: xs) = zipWith (+) x (addVecs xs)
 
-    lcomb :  Vect k e -> Vect k (Vect n e) -> Vect n e
+    svmult : e -> Vect n e -> Vect n e
+    svmult c v = map (c *) v
+
+    lcomb : Vect k e -> Vect k (Vect n e) -> Vect n e
     lcomb cs vs = addVecs (zipWith svmult cs vs)
-
-
--- NOTE: The second case above (empty RHS matrix) is not a possible case mathematically (nor the first case),
--- and so is defined somewhat arbitrarily. In this case n is unconstrained by inputs and yet we need to have a
--- definite value for it in the results. That can be handled by type inference or passing the implicit explicitly,
--- but we still need to fill the n-length vectors with e values which aren't derived from the input matrices.
 
