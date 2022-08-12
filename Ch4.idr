@@ -1,5 +1,8 @@
 module Ch4
 
+import Data.Vect
+
+
 data Direction = North | East  | South | West
 
 turnClockwise : Direction -> Direction
@@ -66,4 +69,46 @@ maxMaybe Nothing x = x
 maxMaybe j1@(Just x) Nothing = j1
 maxMaybe j1@(Just x) j2@(Just y) = if x > y then j1 else j2
 
+data PowerSource = Pedal | Petrol | Battery
 
+data Vehicle : PowerSource -> Type where
+  Bicycle : Vehicle Pedal
+  Car : (fuel : Nat) -> Vehicle Petrol
+  Bus : (fuel : Nat) -> Vehicle Petrol
+  Unicycle : Vehicle Pedal
+  Motorcycle: (fuel : Nat) -> Vehicle Petrol
+  ElectricVehicle : (level : Nat) -> Vehicle Battery
+
+wheels : Vehicle _ -> Int
+wheels Bicycle = 2
+wheels (Car _) = 4
+wheels (Bus _) = 8
+wheels (Motorcycle _) = 2
+wheels Unicycle = 1
+wheels (ElectricVehicle _) = 4
+
+refuel : Vehicle Petrol -> Vehicle Petrol
+refuel (Car fuel) = Car 100
+refuel (Bus fuel) = Bus 100
+refuel (Motorcycle fuel) = Motorcycle 100
+
+recharge : Vehicle Battery -> Vehicle Battery
+recharge (ElectricVehicle level) = ElectricVehicle 100
+
+zip : Vect n a -> Vect n b -> Vect n (a,b)
+zip [] [] = []
+zip (x :: xs) (y :: ys) = (x, y) :: (xs `zip` ys)
+
+takeVect : (k : Fin (S n)) -> Vect n a -> Vect (cast k) a
+takeVect FZ _ = []
+takeVect (FS j) (y :: xs) = y :: takeVect j xs
+
+sumEntries : Num a => {n : Nat} -> (pos : Integer) -> Vect n a -> Vect n a -> Maybe a
+sumEntries pos xs ys =
+  case integerToFin pos n of
+    Nothing => Nothing
+    (Just k) => let e1 = index k xs
+                    e2 = index k ys
+                in Just (e1 + e2)
+
+      
